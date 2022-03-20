@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Goalie simulator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+			body { margin: 0; }		
+		</style>
+  </head>
+  <body style="background-color: darkgreen;">
+    <h1 id="saves"></h1>
+    <div id="container"></div>
+    <img src="goalie_save_message.png" id="snackbarGood"></img>
+    <img src="goalie_didntsave_message.png" id="snackbarBad"></img>
+  </body>
+<script>
+ function getSnackbarGood() {
+  var x = document.getElementById("snackbarGood");
+  x.className = "show";
+  setTimeout(function(){ x.className = x.className.replace("show", ""); }, 1000);
+}
+
+function getSnackbarBad() {
+  var x = document.getElementById("snackbarBad");
+  x.className = "show";
+  setTimeout(function(){ x.className = x.className.replace("show", ""); }, 1000);
+}
+
+(function (window, document, THREE){
+  var width = 1525, height = 620,
+      viewAngle = 60,
+      aspect = width / height,
+      near = 0.1, far = 5000,
+      ballRadius = 20,
+      fieldWidth = 1400, fieldLength = 3000,
+      playerWidth = 99, playerLength = 150,
+      
+      saves = document.getElementById('saves'),
+      snackbarGood = document.getElementById('snackbarGood'),
+      snackbarBad = document.getElementById('snackbarBad'),
+      
+      container, 
+      renderer, 
+      camera, 
+      mainLight, 
+      scene, 
+      soccerBall, 
+      player, 
+      playerAI, 
+      field, 
+      running,
+      score = {
+        saveGood: 0,
+        saveBad: 0
+      };
+      
+  function moveBall() {
+    var direction = 1;
+    soccerBall.$velocity = {
+      x: Math.random() * (50 - 20) + (-20),
+      z: direction * Math.random() * (50 - 20) + 20
+    };
+    soccerBall.$stopped = false;
+  }
+  
+  function ballMovement() {
+    if(!soccerBall.$velocity) {
+      moveBall();
+    }
+    
+    if(soccerBall.$stopped) {
+      return;
+    }
+    
+    updateBallPosition();
+    
+    if(didHitBorder()) {
+      soccerBall.$velocity.x *= -1; 
+    }
+    
+    if(didPlayerHit()) {
+      hitBallBack(player);
+    }
+    
+    if(didPlayerFail()) {
+      handleEvent('saveBad');
+      getSnackbarBad();
+    }
+    
+    if(didPlayerSave()) {
+      handleEvent('saveGood');
+      getSnackbarGood();
+    }
+  }
+  
+  function didPlayerFail() {
+    return soccerBall.position.z > player.position.z + 100 ;
+  }
+  
+  function didPlayerSave() {
+    return soccerBall.position.z < playerAI.position.z - 100;
+  }
+  
+  function updateBallPosition() {
+    var ballPos = soccerBall.position;
+    
+    ballPos.x += soccerBall.$velocity.x;
+    ballPos.z += soccerBall.$velocity.z;
+    
+    ballPos.y = -((ballPos.z - 1) * (ballPos.z - 1) / 5000) + 450; //arka
+  }
+  
+  function didHitBorder() {
+    var ballX = soccerBall.position.x,
+        fieldWidthDivided = fieldWidth / 2;
+    return ballX - ballRadius < -fieldWidthDivided || ballX + ballRadius > fieldWidthDivided;
+  }
+  
+  function hitBallBack(playerObject) {
+    soccerBall.$velocity.x = (soccerBall.position.x - playerObject.position.x) / 5; 
+    soccerBall.$velocity.z *= -1;
+  }
+  
+  function didPlayerHit() {
+    return soccerBall.position.z + ballRadius >= player.position.z && isBallAlignedWithPlayer(player);
+  }
+  
+  function isBallAlignedWithPlayer(playerObject) {
+    var playerWidthDivided = playerWidth / 2,
+        playerX = playerObject.position.x,
+        ballX = soccerBall.position.x;
+    return ballX > playerX - playerWidthDivided && 
+        ballX < playerX + playerWidthDivided;
+  }
+  
+  function handleEvent(goal) {
+      countSave(goal);
+      refreshSaves();
+      stopBall();
+      setTimeout(reset, 2000);
+  }
+  
+  function refreshSaves() {
+      saves.innerHTML = 'Good saves: ' + score.saveGood + ' Bad saves: ' + score.saveBad;
+  }
+  
+  function stopBall(){ 
+    soccerBall.$stopped = true;
+  }
+  
+  function countSave(player){
+    score[player]++;
+    console.log(score);
+  }
+  
+  function startRender(){
+    running = true;
+    render();  
+  }
+  
+  function stopRender() {
+    running = false;
+  }
+  
+  function render() {
+    if(running) {
+      requestAnimationFrame(render);
+      ballMovement();
+      renderer.render(scene, camera);
+    }
+  }
+  
+  function reset() {
+    soccerBall.position.set(0,0,0);
+    soccerBall.$velocity = null;
+  }
+  
+  function init() {
+
+    const soccerBallTexture = "/soccer_ball_texture.jpg";
+    const soccerFieldTexture = "/soccer_field_texture.jpg";
+    const soccerSceneTexture = "/soccer_scene_texture.jpg";
+    const soccerGoalieGrassTexture = "/soccer_goalie_grass_texture.png";
+    const goalieMessageNice = "/goalie_save_message.png";
+    const goalieMessageNotNice = "/goalie_didntsave_message.png";
+
+    container = document.getElementById('container');
+    document.body.style.overflow = 'hidden';
+    
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x9999BB, 1);
+    container.appendChild(renderer.domElement);
+    
+    camera = new THREE.PerspectiveCamera(viewAngle, aspect, near, far);
+    camera.position.set(0, 100, fieldLength / 2 + 500);
+
+    scene = new THREE.Scene();
+    scene.add(camera);
+
+    /*var goalieMessageGood = new THREE.TextureLoader().load(goalieMessageNice);
+    var material = new THREE.SpriteMaterial({
+      map: goalieMessageGood, 
+      opacity: 0.8
+    });
+
+    var goalieMessageGoodSprite = new THREE.Sprite(material);
+    goalieMessageGoodSprite.scale.set(100, 100, 100);
+    goalieMessageGoodSprite.position.set(0, 170, 1650)
+    scene.add(goalieMessageGoodSprite);
+
+    var goalieMessageBad = new THREE.TextureLoader().load(goalieMessageNotNice);
+    var material = new THREE.SpriteMaterial({
+      map: goalieMessageBad, 
+      opacity: 0.8
+    });
+
+    var goalieMessageBadSprite = new THREE.Sprite(material);
+    goalieMessageBadSprite.scale.set(100, 100, 100);
+    goalieMessageBadSprite.position.set(100, 170, 1650)
+    scene.add(goalieMessageBadSprite);*/
+
+    var soccerSceneGeometry = new THREE.SphereGeometry(3000, 700, 500),
+        soccerSceneMaterial = new THREE.MeshPhongMaterial({ 
+          map: new THREE.TextureLoader().load(soccerSceneTexture),
+          side: THREE.DoubleSide,
+          shininess: 0
+          });
+    soccerStadium = new THREE.Mesh(soccerSceneGeometry, soccerSceneMaterial);
+    soccerStadium.position.set(0, 150, 0);
+    scene.add(soccerStadium);
+    
+    var ballRangeGeometry = new THREE.CubeGeometry(fieldWidth, 0, fieldLength, 1, 1, 1),
+        ballRangeMaterial = new THREE.MeshPhongMaterial({ 
+          map: new THREE.TextureLoader().load(soccerFieldTexture),
+          shininess: 0,
+          transparent:true, 
+          opacity:0
+          });
+    ballRange = new THREE.Mesh(ballRangeGeometry, ballRangeMaterial);
+    ballRange.position.set(0, -50, 0);
+
+    var bgfieldGeometry = new THREE.CubeGeometry(fieldWidth+3750, 0, fieldLength+1000, 1, 1, 1),
+        bgFieldMaterial = new THREE.MeshPhongMaterial({ 
+          map: new THREE.TextureLoader().load(soccerFieldTexture),
+          shininess: 0
+          });
+    bgField = new THREE.Mesh(bgfieldGeometry, bgFieldMaterial);
+    bgField.position.set(0, -50, -580);
+    scene.add(bgField);
+
+    var goalieGrassGeometry = new THREE.CubeGeometry(fieldWidth+2500, 0, fieldLength+1000, 1, 1, 1),
+        goalieGrassMaterial = new THREE.MeshPhongMaterial({ 
+          map: new THREE.TextureLoader().load(soccerGoalieGrassTexture),
+          shininess: 0,
+          side: THREE.DoubleSide
+          });
+    goalieGrass = new THREE.Mesh(goalieGrassGeometry, goalieGrassMaterial);
+    goalieGrass.position.set(0, -50, 0);
+    scene.add(goalieGrass);
+
+    let loader = new THREE.GLTFLoader();
+    loader.load('/footballNet/scene.gltf', function(gltf) {
+      footballNet = gltf.scene.children[0];
+      footballNet.scale.set(300, 235, 170);
+      footballNet.rotation.z = 1.57079633;
+      scene.add(footballNet);
+      footballNet.position.set(0, 120, 1710);
+    })
+    
+    scene.add(field);
+    player = addPlayerObject();
+    player.position.z = fieldLength / 2;
+    playerAI = addPlayerObject();
+    
+    var ballGeometry = new THREE.SphereGeometry(ballRadius, 16, 16),
+        ballMaterial = new THREE.MeshPhongMaterial({ 
+          map: new THREE.TextureLoader().load(soccerBallTexture),
+          side: THREE.DoubleSide,
+          shininess: 0
+          });
+    soccerBall = new THREE.Mesh(ballGeometry, ballMaterial);
+    scene.add(soccerBall);
+    
+    camera.lookAt(soccerBall.position);
+    
+    mainLight = new THREE.HemisphereLight(0xFFFFFF);
+    scene.add(mainLight);
+    
+    camera.lookAt(soccerBall.position);
+      
+    refreshSaves();
+    startRender();
+    
+    renderer.domElement.addEventListener('mousemove', mouseMove);
+    renderer.domElement.style.cursor = 'none';
+  }
+  
+  function addPlayerObject() {
+
+    let loader = new THREE.GLTFLoader();
+    loader.load('/goalKeeper/scene.gltf', function(gltf) {
+      goalkeeper = gltf.scene.children[0];
+      goalkeeper.scale.set(25, -20, 25);
+      scene.add(goalkeeper);
+      goalkeeper.position.set(10000, -100, 1450);
+    })
+    var playerGeometry = new THREE.CubeGeometry(playerWidth, playerLength, 10, 1, 1, 1),
+      playerMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xCCCCCC,
+        transparent:true, 
+        opacity:0
+        }),
+      player = new THREE.Mesh(playerGeometry, playerMaterial);
+    
+    scene.add(player);
+    return player;
+  }
+  
+  function mouseMove(e) {
+    var mouseX = e.clientX;
+    camera.position.x = goalkeeper.position.x = player.position.x = -((width - mouseX) / width * fieldWidth) + (fieldWidth / 2);
+    goalkeeper.position.x = camera.position.x -100;
+  }
+  init();
+})(window, window.document, window.THREE);
+
+</script>
+</html>
