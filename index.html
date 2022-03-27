@@ -16,8 +16,8 @@
   <body style="background-color: darkgreen;">
     <h1 id="saves"></h1>
     <div id="container"></div>
-    <img src="goalie_save_message.png" id="snackbarGood"></img>
-    <img src="goalie_didntsave_message.png" id="snackbarBad"></img>
+    <img src="/images/goalie_save_message.png" id="snackbarGood"></img>
+    <img src="/images/goalie_didntsave_message.png" id="snackbarBad"></img>
   </body>
 <script>
  function getSnackbarGood() {
@@ -258,12 +258,12 @@ function getSnackbarBad() {
   
   function init() {
 
-    const soccerBallTexture = "/soccer_ball_texture.jpg";
-    const soccerFieldTexture = "/soccer_field_texture.jpg";
-    const soccerSceneTexture = "/soccer_scene_texture.jpg";
-    const soccerGoalieGrassTexture = "/soccer_goalie_grass_texture.png";
-    const goalieMessageNice = "/goalie_save_message.png";
-    const goalieMessageNotNice = "/goalie_didntsave_message.png";
+    const soccerBallTexture = "/images/soccer_ball_texture.jpg";
+    const soccerFieldTexture = "/images/soccer_field_texture.jpg";
+    const soccerSceneTexture = "/images/soccer_scene_texture.jpg";
+    const soccerGoalieGrassTexture = "/images/soccer_goalie_grass_texture.png";
+    const goalieMessageNice = "/images/goalie_save_message.png";
+    const goalieMessageNotNice = "/images/goalie_didntsave_message.png";
 
     container = document.getElementById('container');
     document.body.style.overflow = 'hidden';
