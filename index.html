@@ -70,22 +70,79 @@ function getSnackbarBad() {
   }
 
   function hitBallSound() {
-        const listener = new THREE.AudioListener();
-        camera.add( listener );
-        const sound = new THREE.Audio( listener );
-        const audioLoader = new THREE.AudioLoader();
-        ballHit = audioLoader.load( '/hitBall.mp3', function( buffer ) {
-            sound.setBuffer( buffer );
-            sound.setLoop( false );
-            sound.setVolume( 0.5 );
-            sound.play();
-        });
-        return ballHit;
-    }
+    const listener = new THREE.AudioListener();
+    camera.add( listener );
+    const sound = new THREE.Audio( listener );
+    const audioLoader = new THREE.AudioLoader();
+    ballHit = audioLoader.load( '/ambientSounds/hitBall.mp3', function( buffer ) {
+      sound.setBuffer( buffer );
+      sound.setLoop( false );
+      sound.setVolume( 0.5 );
+      sound.play();
+    });
+    return ballHit;
+  }
+
+  function ballMissSound() {
+    const listener = new THREE.AudioListener();
+    camera.add( listener );
+    const sound = new THREE.Audio( listener );
+    const audioLoader = new THREE.AudioLoader();
+    ballMiss = audioLoader.load( '/ambientSounds/ballMiss.mp3', function( buffer ) {
+      sound.setBuffer( buffer );
+      sound.setLoop( false );
+      sound.setVolume( 0.5 );
+      sound.play();
+    });
+    return ballMiss;
+  }
+
+  function ballKickSound() {
+    const listener = new THREE.AudioListener();
+    camera.add( listener );
+    const sound = new THREE.Audio( listener );
+    const audioLoader = new THREE.AudioLoader();
+    ballKick = audioLoader.load( '/ambientSounds/ballKick.mp3', function( buffer ) {
+      sound.setBuffer( buffer );
+      sound.setLoop( false );
+      sound.setVolume( 1 );
+      sound.play();
+    });
+    return ballKick;
+  }
+
+  function crowdCheeringSound() {
+    const listener = new THREE.AudioListener();
+    camera.add( listener );
+    const sound = new THREE.Audio( listener );
+    const audioLoader = new THREE.AudioLoader();
+    crowdCheering = audioLoader.load( '/ambientSounds/crowdCheering.mp3', function( buffer ) {
+      sound.setBuffer( buffer );
+      sound.setLoop( false );
+      sound.setVolume( 0.5 );
+      sound.play();
+    });
+    return crowdCheering;
+  }
+
+  function uefa2008OfficialSoundtrack() {
+    const listener = new THREE.AudioListener();
+    camera.add( listener );
+    const sound = new THREE.Audio( listener );
+    const audioLoader = new THREE.AudioLoader();
+    uefa2008Official = audioLoader.load( '/ambientSounds/uefa_2008_official_soundtrack.mp3', function( buffer ) {
+      sound.setBuffer( buffer );
+      sound.setLoop( true );
+      sound.setVolume( 0.5 );
+      sound.play();
+    });
+    return uefa2008Official;
+  }
   
   function ballMovement() {
     if(!soccerBall.$velocity) {
       moveBall();
+      ballKickSound();
     }
     
     if(soccerBall.$stopped) {
@@ -106,11 +163,13 @@ function getSnackbarBad() {
     if(didPlayerFail()) {
       handleEvent('saveBad');
       getSnackbarBad();
+      ballMissSound();
     }
     
     if(didPlayerSave()) {
       handleEvent('saveGood');
       getSnackbarGood();
+      crowdCheeringSound();
     }
   }
   
@@ -175,6 +234,7 @@ function getSnackbarBad() {
   }
   
   function startRender(){
+    uefa2008OfficialSoundtrack();
     running = true;
     render();  
   }
@@ -343,6 +403,7 @@ function getSnackbarBad() {
     camera.position.x = goalkeeper.position.x = player.position.x = -((width - mouseX) / width * fieldWidth) + (fieldWidth / 2);
     goalkeeper.position.x = camera.position.x -100;
   }
+
   init();
 })(window, window.document, window.THREE);
 
