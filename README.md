@@ -17,5 +17,5 @@ The user controls the goalkeeper with the mouse, moving the goalie to both right
 </p>
 
 ## Preview
-![Goalkeeper Game](preview/goalkeepergame.gif)
+![Goalkeeper game](preview/goalkeepergame.gif)
 
