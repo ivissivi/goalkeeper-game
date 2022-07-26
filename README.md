@@ -13,7 +13,7 @@ The successful and unsuccessful saves are displayed as a snackbar and an icon po
 ### Movement
 The user controls the goalkeeper with the mouse, moving the goalie to both right and left directions. Movements to the right and left are "locked". The player stops right at the side poles. A player's hitbox is a rectangle that is slightly larger than the player's model for it to be more simple to collide with the ball.
 <p align="center">
-  <img src="preview/picture3.png?raw=true" />
+  <img src="preview/picture3.png" />
 </p>
 
 ## Preview
