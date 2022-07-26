@@ -15,3 +15,8 @@ The user controls the goalkeeper with the mouse, moving the goalie to both right
 <p align="center">
   <img src="preview/picture3.png?raw=true" />
 </p>
+
+## Preview
+<p align="center">
+  <img src="preview/goalkeepergame.gif?raw=true" />
+</p>
