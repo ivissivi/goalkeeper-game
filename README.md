@@ -1,4 +1,4 @@
-# GrafProg_3rd_practical
+# Goalkeeper game
 ## Goalkeeper game using Three.js
 ### Idea
 A simple game in which the player uses the mouse to control the goalkeeper. The main task of the game is to repel the ball that is sent through the goal. The goalkeeper's successful and unsuccessful saves are displayed in the scoreboard.
